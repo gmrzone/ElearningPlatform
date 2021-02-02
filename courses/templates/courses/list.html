@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load cache %}
+{% load static %}
+{% block css %}
+<style>
+.course-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+}
+.course-list-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+
+}
+.course-item {
+
+    display: flex;
+    justify-content: space-between;
+    
+}
+</style>
+{% endblock %}
+{% block title %}
+<title>
+    {{request.user.username}} Courses
+</title>
+{% endblock %}
+{% block content %}
+<section class="course-list">
+    <h1>My Courses</h1>
+    <article class="course-list-container">
+        {% cache 300 courses_fregment course %}
+        {% for course in courses %}
+            <div class="course-item">
+                <h5>{{course.title}}</h5>
+                <p class="course-links">
+                    <a href="{% url 'courses:module_list_content' course.modules.first.id %}" class="course-link btn btn-success btn-sm">Contents</a>
+                    <a href="{% url 'courses:update_course' course.id %}" class="course-link btn btn-success btn-sm">Edit</a>
+                    <a href="{% url 'courses:delete_course' course.id %}" class="course-link btn btn-danger btn-sm">Delete</a>
+                    <a href="{% url 'courses:update_module' course.id %}" class="course-link btn btn-success btn-sm">Modules</a>
+                </p>
+            </div>
+        {% empty %}
+        <p>You have not created a Course Yet.</p>
+        {% endfor %}
+        {% endcache %}
+        <a href="{% url 'courses:create_course' %}" class="create-course btn btn-success">Create Course</a>
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+{% endblock %}

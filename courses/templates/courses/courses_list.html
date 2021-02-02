@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load thumbnail %}
+{% block css %}
+<link href="{% static 'css/course_list.css' %}" rel="stylesheet" type="text/css">
+{% endblock %}
+{% block title %}
+<title>
+    {% if subject %}
+    {{ subject.title }} Courses Lists
+    {% else %}
+    All Courses
+    {% endif %}
+</title>
+{% endblock %}
+{% block content %}
+<section class="main-section">
+    <h1 class="main-title">{% if subject %}{{subject.title}} Course Lists{% else %}All Courses{% endif %}</h1>
+    <article class="sidebar">
+        <ul class="sidebar-list">
+            {% for s in subjects %}
+            <li class="list-item"><a href="{% url 'courses:course_list_subject' s.slug  %}" {% if s.id == subject.id %}class="active"{% endif %}>{{s.title}} [{{s.courses_count}}]</a></li>
+            {% endfor %}
+        </ul>
+    </article>
+    <article class="contents">
+        {% for i in courses %}
+            <div class="course-item">
+                <a href="{% url 'courses:course_detail' i.slug %}" class="course-item-link">
+                    <img src="{% thumbnail i.image 220x150 crop %}" class="" alt="course-image">
+                    <p>{{i.title}}</p>
+                    <p>{{i.module_count}} Modules</p>
+                    <p>Instructor {{i.owner.username}}</p>
+                </a>
+            </div>
+        {% empty %}
+                <h5>There is No Course For {{subject.title}}</h5>
+        {% endfor %}
+    </article>
+</section>
+{% endblock %}

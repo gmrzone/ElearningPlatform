@@ -1,0 +1,71 @@
+@import '_variables.scss';
+.main-section {
+    display: grid;
+    grid-template-columns: 140px auto;
+    grid-template-areas: "title title"
+                         "sidebar content";
+    row-gap: 30px;
+
+    @media (min-width: 900px){
+        grid-template-columns: 20% 80%;
+    }   
+}
+.main-title {
+    grid-area: title;
+}
+.sidebar {
+    grid-area: sidebar;
+    min-width: 140px;
+
+    .sidebar-list {
+        list-style: none;
+        padding: 0;
+        box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+
+        .list-item {
+            color: black;
+            
+            a {
+                text-decoration: none;
+                display: block;
+                padding: 5px 10px;
+                background: lighten(black, 30%);
+                color: white;
+            }
+            a.active {
+                background: lighten(black, 60%);
+                color: darkcyan;
+                font-weight: bolder;
+            }
+        }
+    }
+}
+.contents {
+    grid-area: content;
+    padding: 0px 30px;
+    display: flex;
+    flex-wrap: wrap;
+
+
+    .course-item {
+        display: flex;
+
+        .course-item-link {
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            border-radius: 2px;
+            color:black;
+
+            p {
+                margin: 0;
+            }
+
+            &:hover {
+                background: darken($color: White, $amount: 20%);
+            }
+        }
+    }
+}

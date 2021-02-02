@@ -1,0 +1,625 @@
+In the previous chapter we created a Restful Api for our Project. In this Chapter we will Build a chat server for student using Django Channels. Student will be able to access a different chat room for each course
+they are enrolled on. To create the Chat Server we will learn how to serve our Django Project through Asynchronous Server Gateway Interfaces (ASGI), and you will implement Asynchronous Communiactions
+
+In this Chapter we will 
+* Add Channels to our Project 
+* Build a WebSocket consumer and approprete routing
+* Implement a WebSocket client
+* Enable a channel layer with Redis
+* Make Your consumers fully asynchronous.
+
+# Creating a Chat applications
+
+We are going to implement a chat server to provide students with a chat room for each course. Student Enrolled on a course will be able to access the course chat room and exchange messages in real time. We will use 
+Channels to build this functionality. Channels is a Django applications that extends Django to handle protocols that require long-running connections. such as WebSockets, chatbots, or MQTT (a lightweight publish/
+subscribe message transport commonly used in Internet of things Projects)
+
+Using Channels we can easily implement realtime or asynchronous functionalities into our Project in addition to your standard Http synchronous views. You will start by adding a new applications to your project 
+The new application will contain the logic for the chat server.
+
+Create a new app called chat using the command "django-admin startapp chat" and add the app in the installed app settings
+
+# Implementing The chatroom view
+You will provide the student with different chat room for each course. You need to create a view for student to join the chat room of a given Course. Onlu Student who are enrolled on the course will be able to
+access the course Chatroom 
+
+Edit the views.py file of the chat application and add the following cdoe to it.
+
+from django.conrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponseForbidden
+
+@login_required
+def course_chat_room(request, course_id):
+    try:
+        course = request.user.enrolled_courses.get(id=course_id)
+    except Course.DoesNotExist:
+        return HttpResponseForbidden()
+    context = {'course': course}
+    return render (request, 'chat/room.html, context)
+
+This is the course_chat_room view. In this view we use the login_required Decorator to prevent any non-authenticated users from accessing the view. the view receives a required course_id parameter that is used
+to retrive the course with the given ID. We access the courses that user has enrolled on through the relationship user.enrolled_courses and you retrive the course given if from that subset of courses. if the 
+course with the given id does not exist or the user is not enrolled on it. You return an HttpResponseForbidden() response which translate to an Http response with status 403. If the course with the given id exist
+and the user is enrolled on it, you render the chat/room.html template passing the course object to the template context. 
+
+You need to add a url pattern for this view. Create a new file inside the chat application directory and name it urls.py add the following code to it.
+from django.urls import path
+from .import views
+
+app_name = 'chat'
+
+urlpatterns = [
+    path('room/<int:course_id>/', views.course_chat_room, name='chat_room')
+]
+This is the initial URL pattern file for the chat application you define the chat_room pattern including the course_id parameter with the int prefix as you only expect an integer value here. Also include the 
+chat application url file in the main url file like
+
+path('', include('chat.urls', namespace="chat"))
+
+The URl for the chat application is added to the project under the chat/ path.
+
+Now we need to create a template for the chat_room view. This template will contain an area to visualize the messages that are exchanged in the chat and a text input with a submit button to send text messages 
+to that chat.
+
+create a template for chat.html as follow
+
+{% extends base.html %}
+{% load static %}
+{% block css %}
+{% endblock %}
+{% block content %}
+<section class="chatbox">
+<article id="chats">
+</article>
+<article id="chat-inputs">
+<input type="text" id="chat-messages-input">
+<input type="submit" id="chat-message-submit" value="Send">
+</article>
+</section>
+{% endblock %}
+{% block js %}
+<script>
+</script>
+{% endblock %}
+
+This is the template for the courses chat room. In this template we extent the base.html template of our Project and finn in the context block. in this template we create an empty article tag with id as chats
+this article will contain all the chats. we also created a article which contains a input text for chat message input and an submit button to sent the chat input. 
+
+# Deactivating the per-site cache
+In chapter 11 Rendering and caching we added a site-wide cache to our Django Project. Now we need to follow a more granular approach for caching to prevent the chatroom from being cached. We will deactivate the 
+per-site cache to avoid site-wide cache and only cache where needed.
+
+Edit the settings.py file and comment out the UpdateCacheMiddleware and FetchFromCacheMiddleware classes from the middleware settings. After removing those middleware we have deactivated the per-site cache in our
+Project to avoid the new chatroom views from being cached. Next we will need to ad channels to our Django Project to implement a real-time chat server
+
+# Real-Time Django with channels.
+We are providing a chat server to provide students with a chat room for each course. Student enrolled on a course will be able to access the course chatroom and exchange the messages. This functionality requires
+real-time communication between the server and the client. The client should be able to connect to the chat and send or receive data at any time. There are several ways you could implement this feature using 
+AJAX polling or long polling in combination with storing the messages in your database or redis. However there is no efficent way to implement a chat server using a standard synchronous web application. You are'
+going to build a chat server using asynchronous communication through ASGI.
+
+# Asynchronous applications using ASGI
+Django is usually deployed using Web server Gateway interface (WSGI), Which is the standard interface for Python applications to handle HTTP requests. However to work with asynchronous applications we need to use 
+another interface called ASGI which can handle WebSockets requests as well. ASGI is the emerging Python Standards for asynchronous web servers and applications.
+
+Django 3 comes with support for running asynchronous Python through ASGI, But it does not supports asynchronous views or middleware. However as mentioned, Channels extends Django to handle not only HTTP but also 
+protocols that require long-running connections such as webSockets and chatbots.
+
+Websockets Provide full-duplex communication by establishing a persistent open bidirectional Transmission Control Protocol (TCP) connection between servers and clients. We are going to use Websockets to implement 
+Our chat server.
+
+You can find more about deploying Django with ASGI at https://docs.djangoproject.com/en/3.0/howto/deployment/asgi/
+
+# The request/response cycle using Channels.
+Its Important to under5stand the difference in a request cycle between a standard synchronous request cycle and a Channels implementation. The following schema shows the request cycle of a synchronous Django setup.
+When an HTTP request is sent by the browser to the web server, Django handles the request and passes the HttpRequest object to the corresponding view. The view processes the request and return as HttpResponse 
+Object that is send back to the browser as an HTTP response. There is no mechanism maintain an open connections or send data to browser without an associated HTTP requests. 
+
+The following schema shows the request cycle of a django project using Channels with WebSockets.
+* Channels replaces Django's request/response cycle with messages that are send across channels. Http requests are still routed to view function using DJango, but they get routed over channels. This allows for 
+  websockets messages handling as well where you have producers and consumers that exchange messages across a channel layer. Channels perserves Django's synchronoyus architechure allowing you to choose between
+  writing synchronous code and asynchronous code or a combination of both.
+
+# Installing channels
+we are going to add Channels to our Project and setup the require basic ASGI application routing for it to manage HTTP requests. Install Channels in our virtual environment using the command pip install channels
+Then edit the settings.py file of the project and add channels to INSTALLED_APPS settings. The channels app is now active in our Project.
+
+Channels expects us to define a single root application that will be executed for all requests. We can define the root application by adding the ASGI_APPLICATION setting in our Project. THIS is similar to the 
+ROOT_URLCONF settings that points to the base URL patterns of your Project. You can place the root application anywhere in our Project but it is recommanded to put it in a project-level file named routing.py
+
+Create a new file next to settings.py file and name it routing.py and add the following code to it.
+
+from channels.routing import ProtocolTypeRouter
+
+application = ProtocolTypeRouter({
+    # Empty for Now
+})
+
+Then add the following line in settings.py file 
+
+ASGI_APPLICATION = 'projectname.routing.application'
+
+In the previous Code you define the main ASGI application that will be executed when serving our Django project through ASGI. You use the ProtocolTypeRouter class provided by channels as the main entry point 
+of your Routing system . ProtocolTypeRouter takes a dictionary that maps communiaction types like http or websocket to ASGI appliaction. You instantiate the class with an empty dictionary that later we will 
+fill with a routes for your chat application WebSocket Consumer.
+
+When the channel is added in the INSTALLED_APPS settings it takes control over the runserver command replacing the standard Django Development server. Besides handling URL routing to Django views for synchronous
+the Channel Development server also manages routes to Websocket consumers.
+
+Start the development server using the command python manage.py runserver. You should see the output similar to this.
+Check the output that contains the line "Starting ASGI/Channels version 2.4.0 development server". This line confirms that we are using the channels development server which is capable of managing synchronous and
+asynchronous requests. instead of the standard Django development server. Http requests continue to behave the same as before but they get routed through channels. 
+
+Now that Channels is installed in pour Project you can build the chat server for Courses. In order to implement the chat server for our Project we will need to take the following steps. 
+1) Set up a consumer : Consumers are individual pieces of code that can handle Websockets in a very similar way to traditional HTTP views. We will build a Consumer to read and write messages to a communication 
+   channels
+2) Configure routing : Channels provides routing classes that allow you to combine and stack your consumers. You will configure URL routing for your chat consumers.
+3) Implement a WebSocket client : When the student accesses the chat room, you will connect to the websocket from the browser and send or receive messages using Javascript.
+4) Enable a channel Layer : Channel Layer allow you to talk between different instances of an application. They're a usefull part of making a destributed real-time applications. You will set up a channel layer
+   Using Redis.
+
+# Writing a comsumer
+Consumers are the equilivant of Django views for asynchronous applications. As mentioned they handle WebSocket in a very similay way to how traditional views handled HTTP requests. Consumers are ASGI application
+that can handle messages notifications and other things. Unlike Django views consumers are built for long-running communications. URLS are mapped to consumers through routing classes that allow you to combine 
+and stack consumers.
+
+Lets Implement a basic Consumer that is able to accept WebSocket connections and echoes every messages it receives from the WebSocket back to it. This initial functionalities will allow the student to send message
+to the consumers and receive back the messages it sends.
+
+Create a new file inside the chat application directory and name it consumers.py add the following code to it.
+import json
+from channels.generic.websocket import WebsocketConsumer
+
+class ChatConsumer(WebsocketConsumer)
+    def connect(self):
+        # accept connection
+        self.accept()
+
+    def disconnect(self, close_code):
+        pass 
+
+    # Receive Message From WebSocket
+    def receive(self, text_data):
+        test_data_json = json.loads(text_data)
+        message = test_data_json['message']
+        # Send Message To WebSocket
+        self.send(test_data=json.dumps({'message': message}))
+
+This is the ChatConsumer consumer. This class Inherits from Channels WebsocketConsumer class to Implement a basic WebSocket Consumer. In this consumer you implemented the following Methods.
+
+* connect() : called when a new connection is received. You accept the connection with self.accept(). You can also reject a cnnection with self.close()
+* disconnect() : Called When socket closes. You use pass because you dont need to implement any actions when a client closes the connection. 
+* receive() : Called When data is received. You expect text to be received as text_data (this could also be binery_data for Binery Data). You treat the text data received as JSON. Therefore you use json.loads()
+  To load the received JSON data into a Python Dictionary. You access the message Key which you expect to be present in the JSON Structure received. To echo the messages you send the message back to the WebSocket
+  with self.send() transforming it in JSON format again through json.dumps() 
+
+The initial version of the ChatConsumer consumer accepts any WebSocket connections and echoes to the WebSocket Client every messages it receives. Note that the consumer does not breadcast messages to other clients
+yet. You will build this functionality by implementing a channel layer later.
+
+# Routing
+You need to define a URL to route connections to the ChatConsumer consumer have implemented. Channel Provides routing classes that allow you to combine and stack consumer to dispatch based on what the connection 
+is. You can think of them as the URL routing system of Django for asynchronous applications.
+
+Creare a new file inside the chat application directory and name it routing.py and add the following code to it.
+
+from django.urls import re_path
+from . import consumers
+
+websocket_urlpatterns = [
+    re_path(r'ws/chat/room/(?P<course_id>\d+)/$', consumers.ChatConsumer)
+]
+
+In thic code you map a URL pattern with the chat consumer class that you defined in the chat/consumer.py. You use Django's re_path to define a path with regular expression. The URL includes a integer perameter 
+called course_id. That perameter will be available in the scope of the consumer and will allow you to identify the Course chat room that the user is connected to.
+
+It is a good practice to perpend the WebSocket Urls with /ws/ to differentiate them with URLS used for standard synchronous HTTP requests. This also simplifies the production setup when an Http server routes 
+requests based on paths
+
+Now Edit the Global routing.py next the settings.py and make it look like this
+
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddleWareStack 
+import chat.routing
+
+application = ProtocolTypeRouter({
+    websocket: AuthMiddleWareStack(
+        URLRouter(
+            chat.routing.websocket_urlpatterns
+        )
+    ),
+})
+
+In this code you use URLRouter to map websocket connections to the URL pattern defined in the websocket_urlpattern  list of the chat application routing file. The standard ProtocolTypeRouter router automatically 
+maps Http requests to standard Django views if no specific http mapping is provided. You also use AuthMiddleWareStack provided by channels supports standard Django authentication. where the user details are stored 
+in the session. You plan to access the user instance in the scope of the consumer to identify the user who sends a message.
+
+# Implementing the Websocket Client
+So far you have created the course_chat_room view. and its corresponding template for students to access the course chat room. You have implemented a WebSocket consumer for the chat server and tied it with a URL 
+routing. Now you need to build a WebSocket client to establish a connections with the WebSockets in the course chat room template and be able to send and receive messages.
+
+You are going to implement the WebSocket client with Javascript to open and maintain a connection in the Browser. You will use Jquery for interaction with Document Object model (DOM elements) Since you have already
+loaded it in the base template of the Project.
+
+<script>
+$(document).ready(function(){
+    var url = "ws://" + window.location.host + "/ws/chat/room/" + "{{course.id}}/";
+    var chatSocket = new Websocket(url);
+})
+</script>
+
+In the above code we define a URL with the WebSocket Protocol which looks like ws:// or wss:// for secure Websocket, Just like https://. You build the URl using the current location of the browser which you obtain
+from windows.location.host. The rest of the url is build with the path for the chat room url pattern that you defined in the routing.py file of the chat application
+
+You write the whole URL instead of building it via its name because Channels becasuse Channels does not provide a way to reverse URLS. You use the current course id to generate the URLS for the current course
+and store the URL in a new variable names url
+
+You then Open a WebSocket connections to the stored URL using the new WebSocket(url). You assign the instantiated WebSocket client object to the new variable chatsocket
+
+You have created a WebSocket consumer. You have included routing for it and you have implemented a basic WebSocket client. Lets Try the initial version of the chat.
+
+Start the development server using the following command python manage.py runserver
+
+Open the URL  http://127.0.0.1:8000/chat/room/1/  in the Browser replacing the 1 with id of an existing course in the database. Take a look at the console Output. Besides the HTTP GET request for the Page and
+its static files you should see two lines including WebSocket HANDSHAKING and Websocket CONNECT like the following output.
+
+HTTP GET /chat/room/1/ 200 [0.02, 127.0.0.1:57141]
+HTTP GET /static/css/base.css 200 [0.01, 127.0.0.1:57141]
+WebSocket HANDSHAKING /ws/chat/room/1/ [127.0.0.1:57144]
+WebSocket CONNECT /ws/chat/room/1/ [127.0.0.1:57144]
+
+The channels development servers listens for incoming sockets connections using a standard TCP socket. The Handshake is the Bridge from Http to WebSocket. In HAndshake detail of the connection are negotiated 
+and either party can close the connection before completion.Remember that we are using self.accept() to accept connection in the connect() method of the ChatConsumer class implementation in the consumers.py 
+file of the chat application. The connection is accepted and therefore you see the WebSocket Connect message in the console. 
+
+If you use the browser developer tools the track network connections, you can also see informations for the WebSocket connections that has been established.
+
+Now That we are able to connect to The Websocket its Time to interect with it. We will implement the method to handle common events such as receiving a message and closing a connection. Edit the Chat/room.html
+template of the chat application and modify our javascript as follow.
+
+<script>
+    window.AddEventListner('DomContentLoaded', () => {
+        const course_id = "{{course.id}}"
+        var chatSocket = new WebSocket(
+            'ws://'
+            +window.location.host
+            +"/ws/chat/room/'
+            +course_id
+            +'/'
+        ) 
+        chatSocket.onmessage = (e) => {
+            var data = JSON.parse(e.data)
+            var message = data['message']
+            var $chat = $('#chat')
+            $chat.append('<h3 class="chat">' + message + '</h3>')
+            $chat.scrollTop($chat[0].scrollHeight)
+
+        }
+        chatSocket.onclose = (e) => {
+            console.error("Chat Socket Closed Unexpectively")
+        }
+    })
+</script>
+
+In this code we define the following events for the websocket client:
+* onmessage : Fired When data is received through the WebSocket. You parse the message, which you expect in JSON format and access its message attribute. You then append a new <h3> element with class chat to 
+  our chats div which contains all chat messages. We scroll the chat log <div> to the bottom to ensure that the new message get visibility, You achieve this by scrolling to the total scrollable height of the
+  chat log, which can be obtained by accessing its scrollHeight attribute.
+
+* onclose : Fired when the connection with the websocket is closed. We dont expect to close the connection and therefore we write the error Chat socket closed unexpectively to the console.log() if this happens
+
+We have implemented the action to display the message when a new message is received. Now we nwwd rto implement the functionality to sendf message to the socket as well.
+
+Edit the chat.html template of the chat application and add the following code to it.
+
+var $input = $('#chat-message-input');
+var $submit = $('#chat-message-submit');
+
+$submit.click(() => {
+    var message = $input.val();
+    if (message){
+        // send the message to the websocket
+        chatSocket.send(json.stringify({'message': message}));
+        // Clear the input
+        $input.val("")
+        // Focus the Input
+        $input.focus();
+    }
+})
+
+In this code we define a function for the click event of the submit button which we select using the id chat-message-input. when the button is clicked we perform the following actions.
+* We read the message entered by the user for the value of the text input element with the ID
+* We check if the message has any content in it using if (message)
+* If the user has entered any message we form JSON content such as {'message': 'string entered by user'} bu using JSON.stringify()
+* You send the JSON content through WebSocket calling the send() method of the chatSocket client
+* We clear the content of the text input by setting its value to an empty string with #input.val("")
+* We focus the input of the text message so that the user can write a message straightaway.
+
+The user is now able to send message using the text input and by clicking the submit button
+
+In order to improve the user experiance we will give focus to the text input as soon as the page loads so that the user can type directly in it. We will also capture the keyboard key presses enevts to identify 
+Enter/return key and fire the click() event on the submit button. The user will be able to either click the button or press the enter key to send a message
+
+Edit the chat.html template of the chat application and add the following code to it on bottom of the script
+
+$input.focus()
+$input.keyup((e) => {
+    if (e.which === 13){
+        $submit.click();
+    }
+})
+
+In this code you give the focus to the text input. You also define a function for the keyup() event of the input. For any key code the user presses you check whether its key code 13. This is the key codethat 
+corresponds to Enter/return key. You can use the resourses https://keycode.info/ to identify the the keycode for any key. If enter key is pressed we fire the click() event on the submit button to send the message 
+to the websocket.
+
+Now open the browser and open the url for chat.html and write some text in the input field and click send button or press enter. Yo will see the chat message appear in the chat log. Great the message has been send 
+through websocket and the ChatConsumer nsumer has received the message and has send it back through websocket. The chatSocket client receives the message event and the onmessage finction has been fired adding 
+message to the chat log. 
+
+You have implemented the functionality with a WebSocket consumer and a Websocket client to establish the client/server communication and be able to send and receive events. However the chat server is not able to b
+broadcast the messages to the other clients. If you open a second browser tab enter a message the message will not appear on the first tab. In order to build communication between consumers we have to enable a 
+channel layer.
+
+# Enabling the Channel Layer
+Channels layers allow you to communicate between different instances of an appliaction. A channel layer is a transprot machanism that allows multiple consumer instances to communicate with each other and other 
+parts of Django.
+
+In your Chat server you plan to have multiple instances of ChatConsumer consumer for the same course chatroom. Each student who joins the chatroom will instanciate the WebSocket client in their Browser and will
+open a connection with a instance of the WebSocket consumer. You need a common channel layer to destribute messages between consumers.
+
+# Channels and Groups
+Channel layers provide two abstractions to manage communications channels and Groups.
+* channel : You can think of a channel as an Inbox where messages can be send to or as a task queue. Each Channel has a name. Messages are send to a channel by anyone who knows the channel name and then given
+  to consumers listening on that channel.
+* Group : Multiple channels can be grouped into a group. Each Group has a name. A channel can be added or removed from a group by anyone who knows the group name. Using the Group Name you can also send a message 
+ to all channels in the group.
+
+ We will work with the channel groups to implement the chat server. By creating a channel Group for each course chat room, the Chat consumer instances will be able to communicate with each other
+
+# Setting up the channel layer with redis
+Redis is prefered option for a channel layer through channels has support for the other types of channel layers. Redis works as the communication store for the channel layer. We already used redis in chapter 9
+In order to use redis as Channel Layer we have to install the channels-redis package. Install channels-redis using the followning command "pip install channels-redis" and Edit the settings.py file and add 
+settings for CHANNEL_LAYER as follow
+
+CHANNEL_LAYERS = {
+    'default': {
+        "BACKEND" : 'channels_redis.core.RedisChannelLayer',
+        'CONFIG' : {
+            'hosts': [('127.0.0.1', '6379')],
+        }
+    }
+}
+
+The CHANNEL_LAYER setting defines the configuration for the channels layer available to the Project. You define a default channel layer using the RedisChannelLayer backend provided by the channels_redis and 
+specify the Host 127.0.0.1 and port as 6379 on which redis is running
+
+Lets try the channel Layer. Initialize the the Redis server using the following commande from the shell in your redis directory.
+
+src/redis-server
+Open the python shell and run the following command python manage.py shell
+
+To verify that the channel server is communicating with redis write the following code to send message to a test channel named test_channel and receive it back.
+
+import channels.layers
+from asgiref.sync import async_to_sync
+
+channel_layer = channels.layers.get_channel_layer()
+
+async_to_sync(channel_layer.send)('test_channel', {'message': "Hello"})
+async_to_sync(channel_layer.receive)('test_channel')
+
+You should get the following output
+{'message': 'hello'}
+
+In the previous code we send a message to a test channel through the channel layer and then we retrive it from the channel layer. The channel layer is communicating sucessfully with redis.
+
+# Updating the consumer to broadcast messages
+We will edit the ChatConsumer to use the channel layer. You will use a channel group for each chat room. Therefore we will use the course_id to build the group name. ChatConsumer instances will know the group
+name and will be able to communicate with each other.
+
+Edit the consumers.py file of the chat application and import sync_to_async() function and modify the connect() method of the ChatConsumer class as follow.
+
+class ChatConsumer(WebSocketConsumer):
+
+    def connect(self):
+        self.id = self.scope['url_route']['kwargs']['course_id']
+        self.room_group_name = f"chat_{self.id}"
+        # join the room
+        async_to_sync(self.channel_layer.group_add)(self.room_group_name, self.channel_name)
+        # accept connection
+        self.accept()
+
+In this code we import the async_to_sync() helper function to wrap calls to asynchoronous channel layers methods. ChatConsumer is synchronous WebSocketConsumer consumer. But it needs to call asynchronous methods 
+of the channel layer.
+
+In the new connect() method you perform the following tasks.
+1) you retrive the course id from the scope to know tghe course that the chatroom is associated with. You access self.scope['url_route']['kwargs']['course_id'] to retrive the course_id parameter from the URL. 
+   Every Consumer has a scope with information about its connections arguements passed by URl and the authenticated user if any.
+2) You build the group name with the id of the course that the group correspond to. Remember that you will have a channel group for each course chat room. You store the group name in the room_group_name attribute
+   of the consumer
+3) You join the group by adding the current channel to the Group. You obtain the channel name from the channel_name attribute of the consumer. You use the group_add method of the channel layer to add the channel 
+   to the group. We use the async_to_sync() wrapper to use the channel layer asynchoronous method
+4) You keep the self.accept() call to accept the websocket connection.
+
+When the ChatConsumer consumer receives a new WebSocket connection it adds the channel to the group associated with the course in its scope. The consumer is now able to receive any messages sent to group.
+
+In the same consumers.py file modify the disconnect() method of the ChatConsumer class as follow. 
+
+def desconnect(self, close_code):
+    # leave room group
+    async_to_sync(self.channel_layer.group_discart)(self.room_group_name, self.channel_name)
+
+When the connection is closed you call the group_discard() method of the channel layer to leave the group. You use the async_to_sync() wrapper to use the channel layer asynchronous methods. 
+
+In the same file modify the receive() method to make it look like this
+
+def receive(self, text_data):
+    text_data_json = json.loads(text_data)
+    message = text_data_json['message']
+    async_to_sync(self.channel_layer.group_send)(self.room_group_name, {"type": 'chat_message', 'message': messages})
+
+When you receive a message from the Websocket connection, instead of sending the message to the associated channel we now sent the message to the group. You do this by using the group_send() method of the channel
+layer. You use the async_to_sync() wrapper to use the channel_layer asynchoronous method. you pass the following information in the event sent to the group.
+
+*type : The event type. This is a special key that corresponds to the name of the method that should be invoked on consumers that receive the event. You can implement a method in the consumer named the same as
+ the message type so that it gets executed everytime a message with that specific type is received.
+* message The actual message you are sending
+
+In the consumer.py file add another method called chat_message() in the ChatConsumer class as follow. This Method will accept a peremeter for event which will contain message
+
+def chat_message(self, event):
+    # Send Messahe to client
+    self.send(json.dumps(event))
+
+You name this method chat_message() to match the type key that is send to the channel group when a message is received from the websocket. When the message with type chat_message is send to the group all consumers
+subscribed to the group will receive the message and will execyte the chat_message() method. In the chat_message() method you send the event message received to the WebSocket 
+
+The complete Consumers.py file should now look like this
+
+from channel.generic.websocket import WebSocketConsumer
+import json
+class ChatConsumer(WebSocketConsumer):
+
+    def connect(self):
+        self.id = self.scope['url_route']['kwargs'][course_id]
+        self.room_group_name = f"chat_{self.id}"
+        async_to_sync(self.channel_layer.group_add)(self.room_group_name, self.channel_name)
+        self.accept()
+
+    def disconnect(self, clode_data):
+        async_to_sync(self.channel_layer.group_discart)(self.room_group_name, self.channel_name)
+
+    def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message = text_data_json["message"]
+        async_to_sync(self.channel_layer.group_send)(self.room_group_name, {'type': 'chat_message', 'message': message})
+
+    # Receive Message From room Group
+    def chat_message(self, event):
+        # Send Message To WebSocket
+        self.send(json.dumps(event))
+
+You have implemented a Channel Layer in ChatConsumer allowing consumers to broadcast messages and communicate with each other
+
+Run the development Server with runserver command and open the chat template url using a course id. Then Write a message and send it. Now open a new browser window and and access the same url and send the message
+from each window 
+
+You will see that the first message is only displayed in the first browser window when you open the second window message sent to any of the window are displayed on both of them. When you open a new window and access 
+the chat room URl a new Websocket connection is established between the Javascript WebSocket client in the browser and the Websocket consumer in the server. Each Channel gets added to the group associated with
+the course_id passed through the URL to the consumer. Messages are send to the group and received by all consumers in that group.
+
+# Adding context to the message
+Now that messages can be accessed between the users in a chatroom you probably want to display who send which message and when it was send. lets add some context to the message.
+
+Edit the consumers.py file and add the following code to the receive() method
+
+from django.utils import timezone 
+
+    def connect(self):
+        self.user = self.scope['user']
+        ...
+
+    def receive(self, text_data):
+        now = timezone.now()
+        async_to_sync(self.channel_layer.group_send)(self.room_group_name, {
+            'type': "chat_mesage"
+            'message': message
+            'user': self.user.username
+            'time': now.isoformat()
+        })
+
+You now import the timezone module provided by django. In the connect() method of the consumer we returive the current user from scope with self.scope['user'] and store it in user attribute of the consumer. then
+in the receive() method we use timezone to get the current time using timezone.now() and then pass the user.username and current_time in isoformat() along with message and event to the channel group
+
+Now edit the chat.html file find the code where the websocket receives the message and append to the chat div and modify like this.
+
+var data = JSON.parse(e.data)
+var mssg = data['message']
+
+var self = request.user.username === data['user']
+var name = self : "me" ? data.user;
+var sourse = self : "self" ? "others"
+
+var dateOptions = {hour: 'numeric', 'minute': 'numeric', 'hour12': true}
+vat mssg_time = new Date(data['time']).toLocaleString('en', dataOptions)
+var $char = $('#chat');
+$chat.append('<div class="message ' + source + '">' +
+ '<strong>' + name + '</strong> ' +
+ '<span class="date">' + datetime + '</span><br>' +
+ message +
+ '</div>');
+
+ In this code we implement the following changes
+ 1) we convert the datetime received from the server to Javascript Date object and format it with a specific locale 
+ 2) We retrive the user received in the message and make a comparision with two different variables as helpers to identify the user
+ 3) The variable source gets the value self if the user sending the message is the current user or other otherwise. we obtain the username using Django template language with {{request.user}} to chech whether the
+    message originated from the current user or another user. You then use the source value as class to differentiate message sent by current user and message sent from other users. 
+ 4) The variable name gets value me if the the user sending the message is current user else we get the name from the data 
+ 5) We use the name and time  in the message and append it to the chat div
+
+ now open the chat template url in a browser and send a message with a loginned user. Then open another browser window in incognito mode to prevent the use of same session. Login with with different user and send a 
+ message.
+
+You will be able to excbhange messages using the two different users and see the user and time with a clear distinction between message sent by current user and other users 
+
+# Modifying the COnsumer to be flly asynchronous
+The chatConsumer we have implemented inherits from the base WebSocketConsumer class which is synchronous and that is why we had to use async_to_sync to make asynchoronous tasks. Synchronous consumers are convinient
+for accessing Django models and calling regular synchronous I/O functions. However, asynchoronous present a higher performance since they dont require additional threads when handling requests. Since we are using 
+asynchoronous channels layer functions we can easily write the ChatConsumer class to be asynchronous
+
+Edit the consumers.py class and modify the ChatConsumer as follow
+
+class ChatConsumer(AsyncWebsocketConsumer):
+
+    async def connect(self):
+        self.user = self.scope['user']
+        self.id = self.scope['url_route']['kwargs']['course_id']
+        self.room_group_name = f"chat_{self.id}"
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
+        now = timezone.now()
+        await self.channel_layer.group_send(self.room_group_name, {
+            'type': 'chat_message',
+            'message': message,
+            'username': self.user.username,
+            'time': now.isoformat()
+        })
+        
+    async def chat_message(self, event):
+        await self.send(text_data=json.dumps(event))
+
+You have implemented the following changes:
+* The ChatConsumer now Inherits from the AsyncWebsocketConsumer class to implement asynchronous calls.
+* we have changed the defination of all method from "def" to "async def"
+* We use await to call asynchronous functions that performs the I/O operations
+* We no longer use the async_to_sync() helper function when calling methods on channel layers.
+
+Open the URL http://127.0.0.1:8000/chat/room/1 with two different browser windows again and verify that the chat server still works. The chat server is now fully asynchronous!
+
+Integrating the Chat Application with Existing Views.
+The chat server is now fully implemented and students enrolled on a course are able to communicate with each other. Let's add a link for students to join the chat room for each course.
+
+Edit the students/course/detail.html template of the students application and add the following <h3> HTML element code at the bottom of the <div class="contents"> element:
+<div class="contents">
+ ...
+ <h3>
+    <a href="{% url "chat:course_chat_room" object.id %}">
+    Course chat room
+    </a>
+ </h3>
+</div>
+
+# Summery
+In This Chapter we learned how to create chat server using channels. You implemented a Websocket consumer and client. You also enabled communiaction between consumers using channels layers with redis and Modify 
+the consumer to be fully asynchronous
+
+The nest chapter will teach you how to build a production environment for your Django Project using NGINX, uWSGI and Daphne. You will also learn how to implement a custom middleware and create custom management
+commands.

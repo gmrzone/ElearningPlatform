@@ -1,0 +1,70 @@
+@import '_variables.scss';
+
+.main-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    #chats {
+        display: flex;
+        flex-direction: column;
+        background-color: #66d9ff;
+        padding: 30px 15px;
+        width: 100%;
+        row-gap: 20px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+        border-radius: 4px;
+        overflow-y: auto;
+        height: 600px;
+
+        .chat {
+            display: inline-block;
+            width: auto;
+            background-color: white;
+            box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+            align-self: flex-start;
+            border-radius: 8px;
+            padding: 4px 8px;
+
+            &.self {
+                align-self: flex-end;
+                background-color: #ffe0cc;
+
+                .name {
+                    font-size: 16px;
+                    color: red;
+    
+                }
+            }
+            .name {
+                color: saddlebrown;
+                font-size: 16px;
+            }
+
+            .date {
+                font-size: 16px;
+                float: right;
+                color: royalblue;
+            }
+            
+        }
+
+    }
+
+    #chat-inputs {
+        display: flex;
+        margin-top: 20px;
+
+        .text-input {
+            border-radius: 0px;
+
+            &:focus {
+                box-shadow: rgba(0, 0, 0, 0.18) 0px 2px 4px;
+                
+            }
+        }
+        #chat-message-submit {
+            border-radius: 0px;
+        }
+    }
+}

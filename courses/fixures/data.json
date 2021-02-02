@@ -1,0 +1,99 @@
+[
+{
+  "model": "courses.subject",
+  "pk": 1,
+  "fields": {
+    "title": "Java",
+    "slug": "java"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 2,
+  "fields": {
+    "title": "Python",
+    "slug": "python"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 3,
+  "fields": {
+    "title": "Javascript",
+    "slug": "javascript"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 4,
+  "fields": {
+    "title": "CSS",
+    "slug": "css"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 5,
+  "fields": {
+    "title": "HTML",
+    "slug": "html"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 6,
+  "fields": {
+    "title": "Microsoft office",
+    "slug": "microsoft-office"
+  }
+},
+{
+  "model": "courses.course",
+  "pk": 1,
+  "fields": {
+    "subject": 2,
+    "owner": 1,
+    "title": "Django by example",
+    "slug": "django-example",
+    "overview": "You should see output that includes all applied migrations, including those\r\nof Django. The output will contain the following line:",
+    "created": "2021-01-06T14:54:28.010Z",
+    "updated": "2021-01-06T14:54:28.010Z"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 1,
+  "fields": {
+    "course": 1,
+    "name": "Project 1",
+    "description": "You should see output that includes all applied migrations, including those\r\nof Django. The output will contain the following line:"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 2,
+  "fields": {
+    "course": 1,
+    "name": "project 2",
+    "description": "You should see output that includes all applied migrations, including those\r\nof Django. The output will contain the following line:"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 3,
+  "fields": {
+    "course": 1,
+    "name": "project 3",
+    "description": "You should see output that includes all applied migrations, including those\r\nof Django. The output will contain the following line:"
+  }
+},
+{
+  "model": "courses.module",
+  "pk": 4,
+  "fields": {
+    "course": 1,
+    "name": "Project 4",
+    "description": "You should see output that includes all applied migrations, including those\r\nof Django. The output will contain the following line:"
+  }
+}
+]

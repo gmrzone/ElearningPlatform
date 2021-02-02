@@ -1,0 +1,68 @@
+@import '_variables.scss';
+.main-section {
+    margin-top: 15px;
+}
+.module-side-bar {
+    margin-top: 15px;
+}
+.main-section {
+    display: grid;
+    grid-template-areas: "title title"
+                         "sidebar content";
+    grid-template-columns: 30% 70%;
+    box-shadow: rgba(3, 102, 214, 0.3) 0px 0px 0px 3px;
+    padding: 10px;
+}
+
+.title {
+    grid-area: title;
+
+}
+.module-side-bar {
+    grid-area: sidebar;
+
+    .module-item {
+        background: map-get($map: $colors, $key:main );
+        cursor: pointer;
+        text-decoration: none;
+        color: white;
+        position: relative;
+        padding: 8px;
+        display: block;
+
+        &.selected {
+            
+        background: #00cc58;
+          
+        }
+        &:hover {
+            background: lighten(map-get($colors, main), 20%);
+        }
+    }
+    .module-edit-link {
+        position: absolute;
+    }
+
+    .order {
+        display: block;
+    }
+
+    .seperator {
+        margin: 1px 0 1px 0;
+        background: white;
+        
+    }
+}
+.module-content {
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 35px;
+
+
+    .content-item {
+        padding: 5px;
+        margin-bottom: 5px  ;
+        box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    }
+}

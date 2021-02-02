@@ -1,0 +1,84 @@
+.main-section {
+  margin-top: 15px;
+}
+
+.module-side-bar {
+  margin-top: 15px;
+}
+
+.main-section {
+  display: -ms-grid;
+  display: grid;
+      grid-template-areas: "title title" "sidebar content";
+  -ms-grid-columns: 30% 70%;
+      grid-template-columns: 30% 70%;
+  -webkit-box-shadow: rgba(3, 102, 214, 0.3) 0px 0px 0px 3px;
+          box-shadow: rgba(3, 102, 214, 0.3) 0px 0px 0px 3px;
+  padding: 10px;
+}
+
+.title {
+  -ms-grid-row: 1;
+  -ms-grid-column: 1;
+  -ms-grid-column-span: 2;
+  grid-area: title;
+}
+
+.module-side-bar {
+  -ms-grid-row: 2;
+  -ms-grid-column: 1;
+  grid-area: sidebar;
+}
+
+.module-side-bar .module-item {
+  background: #212529;
+  cursor: pointer;
+  text-decoration: none;
+  color: white;
+  position: relative;
+  padding: 8px;
+  display: block;
+}
+
+.module-side-bar .module-item.selected {
+  background: #00cc58;
+}
+
+.module-side-bar .module-item:hover {
+  background: #4e5862;
+}
+
+.module-side-bar .module-edit-link {
+  position: absolute;
+}
+
+.module-side-bar .order {
+  display: block;
+}
+
+.module-side-bar .seperator {
+  margin: 1px 0 1px 0;
+  background: white;
+}
+
+.module-content {
+  -ms-grid-row: 2;
+  -ms-grid-column: 2;
+  grid-area: content;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  padding: 22px 35px;
+}
+
+.module-content .content-item {
+  padding: 5px;
+  margin-bottom: 5px;
+  -webkit-box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+          box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+/*# sourceMappingURL=module_list.css.map */

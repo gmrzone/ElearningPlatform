@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block css %}
+<style>
+    main {
+        height: 100%;
+    }
+.main-section {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+
+}
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid black;
+    padding: 0px 8% 100px 8%;
+    justify-content: space-between;
+    width: 100%;
+    
+    
+}
+@media (min-width: 600px){
+    .login-form{
+        width: 80%;
+    }
+}
+@media (min-width: 1000px){
+    .login-form{
+        width: 50%;
+    }
+}
+
+.login-now {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    margin-top: 30px;
+}
+.buttons {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    column-gap: 20px;
+
+}
+</style>
+{% endblock %}
+{% block title %}
+<title>
+    Login
+</title>
+{% endblock%}
+{% block content %}
+<section class="main-section">
+    <article class="login-form">
+        <h1 class="">Login To E-Learn</h1>
+        <form method="POST" class="login-now">
+            <input type="hidden" value="{{ next }}"
+            <div>
+                {{form.username.label}}
+                {{form.username}}
+            </div>
+            <div>
+                {{form.password.label}}
+                {{form.password}}
+            </div>
+            {% csrf_token %}
+            <div class="buttons">
+                <input type="submit" class="btn btn-success">
+                <a href="" class="btn btn-dark">Sign-up</a>
+            </div>
+        </form>
+        {% if form.error %}
+        <div class="alert alert-warning" role="alert">Invalid USername or Password</div>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+<script>
+    $(document).ready(function(){
+        const placehohder = ['Username', 'Password']
+        document.querySelectorAll('input[type=text], input[type=password]').forEach((x, y) => {
+            x.classList.add('form-control')
+            x.setAttribute('Placeholder', placehohder[y])
+        })
+    })
+</script>
+{% endblock %}

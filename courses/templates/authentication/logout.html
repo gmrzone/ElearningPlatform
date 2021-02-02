@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+    .simple-mssg {
+        margin-top: 50px;
+        background: lightblue;
+        border-radius: 2px;
+        text-align: center;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+{% block title %}
+{% endblock %}
+{% block content %}
+<section>
+    <article class="simple-mssg">
+        <h4 class="">You have Sucessfully Logout. You can <a href="{% url 'login' %}" class="">Login</a> again.</h4>
+    </article>
+</section>
+{% endblock %}

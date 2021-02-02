@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+.main-section {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+}
+.course-detail {
+    margin-top: 15px;
+}
+</style>
+{% endblock %}
+{% block title %}
+<title>{{object.title}}</title>
+{% endblock %}
+{% block content %}
+<section class="main-section">
+    <h1>{{object.title}}</h1>
+    <article class="course-detail d-flex p-2 bd-highlight flex-column">
+        <h4>Overview</h4>
+        <p><span class="course-subject"><a href="{% url 'courses:course_list_subject' object.subject.slug %}">{{object.subject.title}}</a></span>, <span class="course-module">{{object.modules.count}} Modules</span>, <span class="course-owner"> Instructor : {{object.owner.username}}</span></p>
+        <p>{{object.overview}}</p>
+    </article>
+    <article>
+        <div class="accordion" id="accordionModule">
+            <h2>Modules</h2>
+            {% with modules=object.modules.all %}
+                {% for m in modules %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingm{{m.id}}">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{m.id}}" aria-expanded="false" aria-controls="collapse{{m.id}}">
+                        {{m.name}}
+                      </button>
+                    </h2>
+                    <div id="collapse{{m.id}}" class="accordion-collapse collapse" aria-labelledby="heading{{m.id}}" data-bs-parent="#accordionModule">
+                      <div class="accordion-body">
+                        <strong>{{m.description}}</strong>
+                        {% with contents=m.contents.all %}
+                            <div class="accordion" id="#accordionContents">
+                                <h6>Contents</h6>
+                                {% for c in contents %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingc{{c.id}}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{c.id}}" aria-expanded="false" aria-controls="collapse{{c.id}}">
+                                                {{c.content.title}}
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{c.id}}" class="accordion-collapse collapse" aria-labelledby="heading{{c.id}}" data-bs-parent="#accordionContents">
+                                            <div class="accordion-body">
+                                                <strong>{{c.content.content }}{{c.content.file.url }}{{c.content.image.url }}{{c.content.video.url }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                <p>No Content in this Module</p>
+                                {% endfor %}
+                            </div>
+                        {% endwith %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+            {% endwith %}
+    </article>
+    <article class="course-enrollment">
+        {% if request.user.is_authenticated %}
+        <form class="" method="POST" action="{% url 'student:enroll' %}">
+            {% csrf_token %}
+            {{enrollment_form}}
+            <input type="submit" class="btn btn-bg btn-success" value="Enroll">
+        </form>
+        {% else %}
+        <a href="" class="btn btn-bg btn-success">Register To Enroll</a>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+{% endblock %}

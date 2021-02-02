@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+.sub-section {
+    margin: 20px 0px;
+}
+.main-section {
+    display: grid;
+    grid-template-columns: 260px auto;
+    column-gap: 2%;
+    
+}
+.module-block {
+    display: block;
+}
+.side-bar {
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    background: #262626;
+    border-radius: 2px;
+    max-width: 260px;
+    min-width: 260px;
+}
+.modules-list {
+    list-style: none;
+    padding: 0;
+    
+}
+.module-link {
+    display: block;
+    text-decoration: none;
+    padding: 10px;
+    color: white;
+    
+}
+.module-link:hover {
+    color: white;
+}
+.module-link.active {
+    background: #01e4ca;
+    color: black;
+}
+.module-contents {
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    padding: 20px 20px;
+    border-radius: 2px;
+}
+.content-container {
+    margin-top: 40px;
+}
+</style>
+{% endblock %}
+{% block title %}
+<title>{{object.title}}</title>
+{% endblock %}
+{% block content %}
+<section class="sub-section">
+    <h1>{{object.title}} </h1>
+</section>
+<section class="main-section">
+    {% with modules=object.modules.all %}
+    <article class="side-bar">
+        <ul class="modules-list">
+            <h5 style="color: linen; padding: 5px 10px;">Modules</h5>
+            {% for m in modules %}
+                <li class="module-item">
+                    <a href="{% url 'student:student_course_detail_module' object.id m.id %}" {% if m.id == module.id %}class="module-link active"{% else %}class="module-link"{% endif %}>
+                        <span class="module-block">Module <span class="order">{{m.order|add:1}}</span></span>
+                        <span class="module-block">{{m.name}}</span>
+                    </a>
+                </li>
+            {% endfor %}
+            <li class="module-item" style="background-color: red;">
+                <a href="{% url 'chat:chat_room' object.id %}" class="module-link">
+                    <span class="module-block">Discuss About Course</span>
+                    <span class="module-block">Course Chat Room</span>
+                </a>
+            </li>
+        </ul>
+    </article>
+    {% endwith %}
+    <article class="module-contents">
+        {% with contents=module.contents.all %}
+            <div class="content-item">
+                <h5>{{module.description}}</h5>
+                <div class="content-container">
+                    {% for c in contents %}
+                        {% with item=c.content %}
+                        <h5>{{c.order|add:1}}) {{item.title}}</h5>
+                            {{item.render}}
+                        {% endwith %}
+                        <hr style="margin: 40px 0px;">
+                    {% empty %}
+                     <h5>There is currently No Content For This Module</h5>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endwith %}
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+{% endblock %}

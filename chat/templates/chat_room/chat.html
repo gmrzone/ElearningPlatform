@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/chat.css' %}">
+{% endblock %}
+{% block title %}
+<title>
+    {{course.title}} ChatRoom
+</title>
+{% endblock %}
+{% block content %}'
+<section class="main-section">
+    <article id="chats">
+            <!-- <div class="chat">
+                <span class="name">gmrzone</span>
+                <span class="date">Date</span>
+                <h3>Hi How Are You?</h3>
+            </div>
+            <div class="chat self">
+                <span class="name">Me</span>
+                <span class="date">Date</span>
+                <h3>I Am Fine</h3>
+            </div> -->
+    </article>
+    <article id="chat-inputs">
+        <input type="text" id="chat-message-input" class="form-control text-input">
+        <input type="submit" class="btn btn-success btn-lg" id="chat-message-submit" value="Send">
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+<!-- initialization script tag -->
+<script>
+var courseID = "{{course.id}}"
+var username = "{{request.user}}"
+</script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}

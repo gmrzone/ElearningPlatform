@@ -1,0 +1,84 @@
+.main-section {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  height: 100%;
+}
+
+.main-section #chats {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  background-color: #66d9ff;
+  padding: 30px 15px;
+  width: 100%;
+  row-gap: 20px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+          box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+  border-radius: 4px;
+  overflow-y: auto;
+  height: 600px;
+}
+
+.main-section #chats .chat {
+  display: inline-block;
+  width: auto;
+  background-color: white;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+          box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+  -ms-flex-item-align: start;
+      align-self: flex-start;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.main-section #chats .chat.self {
+  -ms-flex-item-align: end;
+      align-self: flex-end;
+  background-color: #ffe0cc;
+}
+
+.main-section #chats .chat.self .name {
+  font-size: 16px;
+  color: red;
+}
+
+.main-section #chats .chat .name {
+  color: saddlebrown;
+  font-size: 16px;
+}
+
+.main-section #chats .chat .date {
+  font-size: 16px;
+  float: right;
+  color: royalblue;
+}
+
+.main-section #chat-inputs {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  margin-top: 20px;
+}
+
+.main-section #chat-inputs .text-input {
+  border-radius: 0px;
+}
+
+.main-section #chat-inputs .text-input:focus {
+  -webkit-box-shadow: rgba(0, 0, 0, 0.18) 0px 2px 4px;
+          box-shadow: rgba(0, 0, 0, 0.18) 0px 2px 4px;
+}
+
+.main-section #chat-inputs #chat-message-submit {
+  border-radius: 0px;
+}
+/*# sourceMappingURL=chat.css.map */

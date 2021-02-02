@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/module_list.css' %}">
+{% endblock %}
+{% block title %}
+<title>
+Module {{module.order|add:1}} : {{module.name}}
+</title>
+{% endblock %}
+{% block content %}
+<section class="main-section">
+    {% with course=module.course  %}
+        <h1 class="title">Course : {{course.title}}</h1>
+    <article class="module-side-bar">
+        <h3 class="side-bar-title">Modules</h3>
+        {% with modules=course.modules.all %}
+        <div id="modules">
+            {% for m in modules %}
+                <a {% if m == module %}class="selected module-item"{% else %}class="module-item"{% endif %} href="{% url 'courses:module_list_content' m.id %}" data-id="{{m.id}}">
+                    <div class="module-link">
+                        <span>
+                            <strong>Module <span class="order" style="display: inline;">{{m.order|add:1}}</span></strong>
+                            <span class="" style="display: block;">{{m.name}}</span>
+                        </span>
+                    </div>
+                    <a href="{% url 'courses:update_module' m.course.id %}" class="module-edit-link">Edit</a>
+                </a>
+                
+                {% if not forloop.last %}
+                    <hr class="seperator">
+                {% endif %}
+            {% empty %}
+            <div>
+                No Modules
+            </div>
+            {% endfor %}
+        </div>
+        {% endwith %}
+    </article>
+    {% endwith %}
+    {% with contents=module.contents.all %}
+    <article class="module-content">
+        <h4>Module {{module.order}}: {{module.name}}</h4>
+        <p>Module Contents</p>
+        <div id="contents">
+            {% for c in contents %}
+                <div class="content-item" data-id="{{c.id}}">
+                    {{c.content.title}}
+                    <div class="links">
+                        <a href="{% url 'courses:module_content_update' module.id c.content|model_name c.content.id %}" class="btn btn-sm btn-success">Edit</a>
+                        <a href="{% url 'courses:module_content_delete' c.id %}" class="btn btn-sm btn-success">Delete</a>
+                    </div>
+                </div>
+        
+            {% empty %}
+            <div><h4>There is no Content For This Module</h4></div>
+            {% endfor %}
+        </div>
+        <div class="add-contents">
+            <h5>Add New Content To This Module.</h5>
+            <div class="content-links">
+                <a href="{% url 'courses:module_content_create' module.id 'text' %}" class="btn btn-dark btn-sm">Text</a>
+                <a href="{% url 'courses:module_content_create' module.id 'image' %}" class="btn btn-info btn-sm">Image</a>
+                <a href="{% url 'courses:module_content_create' module.id 'file' %}" class="btn btn-success btn-sm">File</a>
+                <a href="{% url 'courses:module_content_create' module.id 'video' %}" class="btn btn-danger btn-sm">Video</a>
+            </div>
+        </div:>
+    </article>
+    {% endwith %}
+</section>
+{% endblock %}
+{% block js %}
+<script>
+$(document).ready(function(){
+    $('#modules').sortable({
+        stop: function(event, ui){
+            module_order = {}
+            $('#modules').children('.module-item').each(function(x, y){
+                $(this).find('.order').text(x+1);
+               module_order[y.dataset.id] = x
+            })
+            console.log(module_order)
+            $.ajax({
+                type: "POST",
+                url : "{% url 'courses:module_reorder' %}",
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(module_order)
+            })
+            
+            
+        }
+    })
+
+    $('#contents').sortable({
+        stop:function(){
+            content_order = new Object()
+            $('#contents').children('.content-item').each(function(){
+                content_order[$(this).data("id")] = $(this).index()
+
+            }),
+
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'courses:content_reorder' %}",
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data : JSON.stringify(content_order),
+            })
+        }
+    })   
+})
+</script>
+{% endblock %}

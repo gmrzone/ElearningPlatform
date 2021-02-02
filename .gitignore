@@ -1,0 +1,7 @@
+myvenv/
+.git/
+/db.sqlite
+/notes
+/notes2
+/notes3
+/notes4

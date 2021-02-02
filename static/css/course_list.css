@@ -1,0 +1,98 @@
+.main-section {
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: 140px auto;
+      grid-template-columns: 140px auto;
+      grid-template-areas: "title title" "sidebar content";
+  row-gap: 30px;
+}
+
+@media (min-width: 900px) {
+  .main-section {
+    -ms-grid-columns: 20% 80%;
+        grid-template-columns: 20% 80%;
+  }
+}
+
+.main-title {
+  -ms-grid-row: 1;
+  -ms-grid-column: 1;
+  -ms-grid-column-span: 2;
+  grid-area: title;
+}
+
+.sidebar {
+  -ms-grid-row: 2;
+  -ms-grid-column: 1;
+  grid-area: sidebar;
+  min-width: 140px;
+}
+
+.sidebar .sidebar-list {
+  list-style: none;
+  padding: 0;
+  -webkit-box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+          box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+
+.sidebar .sidebar-list .list-item {
+  color: black;
+}
+
+.sidebar .sidebar-list .list-item a {
+  text-decoration: none;
+  display: block;
+  padding: 5px 10px;
+  background: #4d4d4d;
+  color: white;
+}
+
+.sidebar .sidebar-list .list-item a.active {
+  background: #999999;
+  color: darkcyan;
+  font-weight: bolder;
+}
+
+.contents {
+  -ms-grid-row: 2;
+  -ms-grid-column: 2;
+  grid-area: content;
+  padding: 0px 30px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+.contents .course-item {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.contents .course-item .course-item-link {
+  text-decoration: none;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  padding: 8px;
+  border-radius: 2px;
+  color: black;
+}
+
+.contents .course-item .course-item-link p {
+  margin: 0;
+}
+
+.contents .course-item .course-item-link:hover {
+  background: #cccccc;
+}
+/*# sourceMappingURL=course_list.css.map */

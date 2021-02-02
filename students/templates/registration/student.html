@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+.main-section {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+}
+.main-section h1 {
+    color: grey;
+}
+</style>
+{% endblock %}
+{% block title %}
+{% endblock %}
+{% block content %}
+<section class="main-section">
+    <h1>Sign-up.</h1>
+    <article class="student-registration">
+        <form class="" method="POST">
+            {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+                {% if form.errors == 'password' %}
+                    Both Password Dont Match Please Try Again
+                {% else %}
+                    There Was Some Problem Creating Your Account Please Try Again.
+                {% endif %}
+              </div>
+            {% endif %}
+            {% csrf_token %}
+            <div class="form-floating mb-3">
+                {{form.username}}
+                <label for="floatingUsername">Username</label>
+            </div>
+            <div class="form-floating mb-3">
+                {{form.email}}
+                <label for="floatingEmail">Email</label>
+            </div>
+            <div class="form-floating mb-3">
+                {{form.password1}}
+                <label for="floatingPassword1">Password</label>
+            </div>
+            <div class="form-floating mb-3">
+                {{form.password2}}
+                <label for="floatingPassword2">Confirm Password</label>
+            </div>
+            <input type="submit" value="Complete Registration" class="btn btn-bg btn-success" style="float: right;">
+        </form>
+    </article>
+</section>
+{% endblock %}

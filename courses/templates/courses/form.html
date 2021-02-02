@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+.course-form-main {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+.course-form {
+    display: flex;
+    flex-direction: column;
+    row-gap: 5px;
+}
+</style>
+{% endblock %}
+{% block title %}
+<title>
+{% if object %}Edit {{object.title}}{% else %}Create A New Course{% endif %}
+</title>
+{% endblock %}
+{% block content %}
+<section class="course-form-main">
+    <h3>
+        {% if object %}
+            Edit Course {{object.title}}
+        {% else %}
+            Create A New Course
+        {% endif %}
+    </h3>
+    <article class="course-form-container">
+        <form class="course-form" method="POST">
+            {% csrf_token %}
+            {{form}}
+            {% if object %}
+                <button type="submit" class="btn btn-success">Save Changes</button>
+            {% else %}
+                <button type="submit" class="btn btn-success">Create Course</button>
+            {% endif %}
+        </form>
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+<script>
+    $(document).ready(function(){
+        const placeholder = ['Course Title', 'Subject Of Your Course', 'slug', 'Course Descriptuion']
+        document.querySelectorAll('input[type=text], select, textarea').forEach((x, y) => {
+                x.classList.add('form-control')
+                
+                if (y === 1){
+                    document.querySelector('option').innerHTML = placeholder[y]
+                }
+                else{
+                    x.setAttribute('placeholder', placeholder[y])
+                }
+        })
+
+        
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+.delete-course-main {
+    margin-top: 15px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.detete-form {
+
+}
+</style>
+{% endblock %}
+{% block title %}
+<title>
+    Delete {{object.title}}
+</title>
+{% endblock %}
+{% block content %}
+<section class="delete-course-main">
+    <h1>Delete Course {{object.title}}. ?</h1>
+    <article class="delete-cource-cont">
+        <p style="font-size: 25px;">Are You sure That You want To Delete This Course ?</p>
+        <form class="detete-form" method="POST">
+            {% csrf_token %}
+            <button class="btn btn-danger btn-lg" type="submit">Confirm</button>
+            <a href="{% url 'courses:manage_course_list'%}" class="btn btn-lg btn-dark">Cancel</a>
+        </form>
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+{% endblock %}

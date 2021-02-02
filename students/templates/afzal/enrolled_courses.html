@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+{% endblock %}
+{% block title %}
+<title>
+    My Courses
+</title>
+{% endblock %}
+{% block content %}
+<section class="main-section">
+    <h1>My Courses</h1>
+    <article class="course-container">
+        {% for c in object_list %}
+            <div class="course-item">
+                <h4>{{c.title}}</h4>
+                <p><a href="{% url 'student:student_course_detail' c.id %}" class="">Access Contents</a></p>
+            </div>
+        {% endfor %}
+    </article>
+</section>
+{% endblock %}
+{% block js %}
+{% endblock %}
